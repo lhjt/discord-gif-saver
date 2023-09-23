@@ -35,7 +35,7 @@ where
         info!("processing tasks");
         let (send_channel, recv_channel) = unbounded::<T>();
 
-        let mut handles = vec![];
+        let mut handles = Vec::with_capacity(self.worker_count);
 
         for _ in 0..self.worker_count {
             let recv_channel = recv_channel.clone();
