@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package discord.settings;
+
+enum FileType {
+  UNKNOWN = 0;
+  GIF = 1;
+  MP4 = 2;
+}
+
+message Settings {
+  // Array of user's saved gifs
+  Intermediary savedGifsWrapper = 2;
+}
+
+message Intermediary {
+  // Array of user's saved gifs
+  repeated SavedGif savedGifs = 1;
+}
+
+message SavedGif {
+  string originalReference = 1;
+  GifDetails details = 2;
+}
+
+message GifDetails {
+  FileType fileType = 1;
+  string proxyAddress = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+}
