@@ -1,8 +1,9 @@
-use std::error::Error;
+use std::{error::Error, sync::Arc};
 
 use base64::{engine::general_purpose, Engine as _};
 use bytes::Bytes;
 use decoding::models::settings::Settings;
+use parking_lot::Mutex;
 use prost::Message;
 use sha2::{Digest, Sha256};
 use tracing::{error, info, instrument};
@@ -78,8 +79,9 @@ async fn main() -> anyhow::Result<()> {
         }
     };
 
+    let mut results = Vec::with_capacity(gifs.saved_gifs.len());
     let mut dp = DownloadPool::new(gifs.saved_gifs, 20, download_gif);
-    dp.complete_tasks().await;
+    dp.complete_tasks(Arc::new(Mutex::new(results))).await;
 
     Ok(())
 }

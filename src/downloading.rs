@@ -1,6 +1,7 @@
-use std::{error::Error, future::Future, marker::PhantomData, mem};
+use std::{error::Error, future::Future, marker::PhantomData, mem, result, sync::Arc};
 
-use async_channel::unbounded;
+use async_channel::{unbounded, Sender};
+use parking_lot::Mutex;
 use tracing::{debug, info};
 
 pub struct DownloadPool<'a, T, U, Fut>
@@ -31,7 +32,7 @@ where
     }
 
     #[tracing::instrument(skip_all)]
-    pub async fn complete_tasks(&mut self) {
+    pub async fn complete_tasks(&mut self, results: Arc<Mutex<Vec<Result<U, Box<dyn Error>>>>>) {
         info!("processing tasks");
         let (send_channel, recv_channel) = unbounded::<T>();
 
@@ -40,11 +41,13 @@ where
         for _ in 0..self.worker_count {
             let recv_channel = recv_channel.clone();
             let t = self.task;
+            let results = results.clone();
 
             let handle = tokio::spawn(async move {
                 debug!("starting worker");
                 while let Ok(task) = recv_channel.recv().await {
-                    t(task).await;
+                    let result = t(task).await;
+                    results.lock().push(result);
                 }
                 debug!("worker finished");
             });
