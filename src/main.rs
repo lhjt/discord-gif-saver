@@ -61,6 +61,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Read in file and decode the base64 into an array
     let data = tokio::fs::read_to_string("sources/response.txt").await?;
+    let data = data.trim();
 
     info!("attempting to parse base64");
     let decoded = general_purpose::STANDARD.decode(data.as_bytes())?;
